@@ -1,0 +1,1199 @@
+openapi: 3.0.0
+info:
+  title: Academic Insights API
+  description: >-
+    This is the documentation for version 0.1.0 of the public facing Academic
+    Insights API. This API is versioned using Semantic Versioning. It allows
+    programatic fetching of Academic Insights data without having to use the web
+    app.
+
+
+    ## Quickstart
+
+
+    > Note: Will fill this out with actual code samples and JSON responses
+    later, but for now this will be a high level outline.
+
+
+    First we need to generate an API key in the Academic Insights webapp.
+
+
+    > \[ instructions to obtain the key. make sure to save the key \]
+
+
+    That API key must be sent in the `Authorization` request header for requests
+    to be validated. For instance, in Postman:
+
+
+    > \[postman screenshots\]
+
+
+    In Javascript:
+
+
+    > \[javascript example\]
+
+
+    In Python:
+
+
+    > \[python example\]
+
+
+    If you attempt to make a request without a proper API key in the
+    Authorization header, an `HTTP 401 Unauthorized` code will be returned.
+
+
+    Now that we have our authentication set up, let's obtain a list of datasets
+    we have access to:
+
+
+    `GET /datasets`
+
+
+    > \[ sample JSON response \]
+
+
+    Notice we have access to the undergraduate dataset.
+
+
+    Let's query for some schools:
+
+
+    `GET /schools/undergraduate?name_contains="harvard"`
+
+
+    > \[ JSON \]
+
+
+    `GET /schools/undergraduate?name_contains="yale"`
+
+
+    > \[ JSON \]
+
+
+    Now that we have the IDs of these universities we can use them in requests
+    later.
+
+
+    Suppose we want to compare Overall Rank - let's get the ID of that metric:
+
+
+    `GET /metrics/undergraduate?name_contains=overall rank`
+
+
+    Perfect, now let's request some data! Let's get datapoints (Facts) for
+    Overall Rank for Yale and Harvard, over the year range 2017 - 2022:
+
+
+    `GET
+    /facts/undergraduate?metric_ids=24&school_ids=2155,1426&years=2017,2018,2019,2020,2021,2022`
+
+
+    > \[ JSON \]
+
+
+    Hooray! We've retrieved the ranks of two IVY league schools over a few
+    years.
+
+
+    Note: If we'd created peer groups or metric groups in the web app, we could
+    have used those in `GET /facts` instead of specifying `metric_ids` and
+    `school_ids` manually.
+  version: 1.0.0
+servers:
+  - url: http://{{baseurl}}
+tags:
+  - name: Schools
+    description: >-
+      Once a school or schools are obtained, their IDs can be used to fetch data
+      points (Facts) on specific metrics. Several fields are returned in a JSON
+      object for each school
+
+
+      ### JSON Response Body
+
+
+      | **Field** | **Description** |
+
+      | --- | --- |
+
+      | `id` | ID of the school |
+
+      | `name` | Name of school, ie `"Harvard University"` |
+
+      | `city` | `"Norfolk"` |
+
+      | `state` | `"CA"` |
+
+      | `type` | Either `"Private`", `"Proprietary"`, or "Public" |
+
+      | `ipeds_id` | Integrated Postsecondary Education Data System id |
+
+      | `dataset` | Dataset of the returned school, for instance `"online-mba"`
+      or `"undergraduate"` |
+  - name: Facts
+    description: >-
+      **Facts** are data points that keep track of the values of different types
+      of metrics from year to year on schools. For instance, suppose you had a
+      metric `"Percentage of graduates (full time) with debt"`. If we were to
+      fetch that percentage value over a 3 year range (2012 - 2014) for Harvard,
+      we'd say we fetched **3 Facts**. We would now have that Percentage value
+      for the years 2012, 2013, and 2014.
+
+
+      So we can say a single **Fact**:
+
+
+      - Is a data point on a specific metric (like `"Percentage of graduates
+      (full time) with debt"`)
+
+      - ...representing a single year
+
+      - ...for a specific school
+          
+
+      We might want to fetch facts over a multi-year range for multiple schools
+      to look at trends in data, ie "Look, our graduation rates are improving
+      relative to other engineering colleges in Virginia. Hooray!"
+  - name: Metrics
+    description: >-
+      A Metric represents a certain _field_ of data, for instance `Overall Rank`
+      or `New student retention rate`. So you can have many **Facts**
+      (datapoints) within a **Metric**.
+
+
+      As an example, Facts who belong to the `Overall Rank` Metric specify the
+      numeric ranking of a school for a certain year. The `Percentage of
+      graduates (part time) with debt` has its own facts as well. Overall, there
+      are over 4000 metrics.
+
+
+      Several fields are returned in a JSON object for each Metric:
+
+
+      | **Field** | **Description** |
+
+      | --- | --- |
+
+      | id | Metric ID |
+
+      | dataset | Dataset this metric belongs to, ie `"online-mba"` |
+
+      | description | Human readable description of the metric, for instance
+      "Overall Rank" |
+
+      | type | A metric can be of several types, here is a list of all 88
+      possible values:  <br>  <br>Academics  <br>Admissions  <br>Career and
+      Salary Statistics  <br>Careers  <br>Library  <br>Ranking  <br>Residency 
+      <br>Student Body  <br>Teacher Preparation  <br>Technology & Support 
+      <br>Country Rankings  <br>Agricultural Sciences  <br>Arts and Humanities 
+      <br>Biology and Biochemistry  <br>Chemistry  <br>Clinical Medicine 
+      <br>Computer Science  <br>Economic and Business  <br>Engineering 
+      <br>Environment/Ecology  <br>Geosciences  <br>Immunology  <br>Materials
+      Science  <br>Mathematics  <br>Microbiology  <br>Molecular Biology and
+      Genetics  <br>Neuroscience and Behavior  <br>Pharmacology and Toxicology 
+      <br>Physics  <br>Plant and Animal Science  <br>Psychiatry/Psychology 
+      <br>Space Science  <br>Social Sciences and Public Health  <br>Applying 
+      <br>Academic Life  <br>Student Life  <br>Cost and Aid  <br>Expenditures 
+      <br>Ranks and Scores  <br>Student Programs and Services  <br>Outcome
+      Measures  <br>Alumni  <br>CLERY Statistics  <br>Faculty  <br>Class size 
+      <br>Specialty Ranks and Scores  <br>Scorecard  <br>Region  <br>Overall
+      Rankings  <br>Economics and Business  <br>Oncology  <br>Surgery 
+      <br>Cardiac and Cardiovascular Systems  <br>Electrical and Electronic
+      Engineering  <br>Mechanical Engineering  <br>Civil Engineering 
+      <br>Biotechnology and Applied Microbiology  <br>Endocrinology and
+      Metabolism  <br>Radiology, Nuclear Medicine and Medical Imaging 
+      <br>Gastroenterology and Hepatology  <br>Infectious Diseases  <br>Cell
+      Biology  <br>Public, Environmental and Occupational Health  <br>Energy and
+      Fuels  <br>Chemical Engineering  <br>Nanoscience and Nanotechnology 
+      <br>College Readiness  <br>Math and Reading Proficiency  <br>Graduation
+      Rate  <br>STEM  <br>Teachers  <br>Medal (2018 and earlier)  <br>Peer
+      Assessment  <br>Optics  <br>Polymer Science  <br>Food Science and
+      Technology  <br>Physical Chemistry  <br>Condensed Matter Physics 
+      <br>Education and Educational Research  <br>Meteorology and Atmospheric
+      Sciences  <br>Water Resources  <br>Artificial Intelligence |
+
+      | format | Possible values:  <br>  <br>number_0  <br>currency 
+      <br>percent  <br>ratio-to-one_0  <br>percentage  <br>percentage_0 
+      <br>Rank  <br>number  <br>ratio-to-one  <br>number_00  <br>ratio 
+      <br>Number  <br>currency_0  <br>number  <br>rank |
+  - name: Metric Groups
+    description: >-
+      A metric group represents a collection of metrics. For instance, you might
+      create a "Gender Metrics" metric group with a collection of metrics
+      related to gender ratios, gender graduation rates, etc... You can then use
+      this metric group to fetch groups of facts (data points) about gender.
+
+
+      Several fields are returned in a JSON object for each metric group:
+
+
+      ### Response JSON Fields
+
+
+      | **Field** | **Description** |
+
+      | --- | --- |
+
+      | `id` | Metric group id |
+
+      | `metrics` | List of metric objects that belong to this metric group. |
+
+      | `user_id` | ID of the user who initially created the metric group |
+
+      | `label` | Human readable description of the metric group, ie: "Top 10
+      Virginia Schools" |
+
+      | `dataset` | "online-mba" |
+
+      | `created` | 2013-08-02 23:06:54.111+00 |
+
+      | `modified` | 2013-08-02 23:06:54.111+00 |
+
+      | `is_public` | Boolean `TRUE` if this is a public metric group that was
+      packaged by default into the application. This type of metric group can't
+      be edited. |
+  - name: Peer Groups
+    description: >-
+      A peer group represents a collection of schools. For instance, you might
+      create a peer group called "Engineering Schools in Virginia" and add the
+      top 5 engineering schools in Virginia to the group. This peer group can
+      then be used to fetch a collection of facts (data points for those
+      schools).
+
+
+      Several fields are returned on a JSON object for each peer group:
+
+
+      ### JSON Response Body
+
+
+      | **Field** | **Description** |
+
+      | --- | --- |
+
+      | `id` | Peer group id |
+
+      | `user_id` | ID of the user who initially created the peer group |
+
+      | `label` | Human readable description of the peer group, ie: "Top 10
+      Virginia Schools" |
+
+      | `dataset` | "online-mba" |
+
+      | `created` | 2013-08-02 23:06:54.111+00 |
+
+      | `modified` | 2013-08-02 23:06:54.111+00 |
+
+      | `is_public` | Boolean `TRUE` if this is a public metric group that was
+      packaged by default into the application. This type of metric group can't
+      be edited. |
+
+      | `schools` | A flat list of schools belonging to this peer group. This is
+      not just a list of school id's, it's a list json objects containing
+      information on each school. |
+  - name: Users
+  - name: Datasets
+    description: >-
+      A Dataset represents a classification type of a school/university. For
+      instance, there are Metrics/Schools/Facts pertaining to Undergraduate
+      Schools under the `"undergraduate"` dataset. Different data exists under
+      the `"online_engineering"` Dataset and `"high_schools"` Dataset. If we
+      know a dataset we're interested in, for instance `"law"` then we can use
+      that to obtain relevant Facts/Metrics/Schools.
+
+
+      A Dataset object will contain two fields on the JSON body:
+
+
+      ### JSON Response Body
+
+
+      | Field | Description |
+
+      | --- | --- |
+
+      | has_access | `BOOLEAN` `True` if you have access to data in this
+      Dataset, `False` otherwise |
+
+      | name | Name of the dataset, can be one of the following values:  <br> 
+      <br>undergraduate  <br>education  <br>engineering  <br>law  <br>business 
+      <br>medical  <br>online_bachelors  <br>online_business 
+      <br>online_education  <br>online_engineering  <br>online_info_tech 
+      <br>online_nursing  <br>online_criminal_justice  <br>online_mba 
+      <br>nursing  <br>global  <br>high_schools |
+paths:
+  /schools/{dataset}:
+    get:
+      tags:
+        - Schools
+      summary: Get Schools
+      description: >-
+        `/schools/:dataset` is a flexible way to search for schools - it
+        supports several filter parameters and returns a flat list of schools.
+
+
+        Some things you could do:
+
+
+        | **Use Case** | **URI** |
+
+        | --- | --- |
+
+        | Search by name (case insensitive) |
+        `/schools/online-mba?name_contains=Hiwassee` |
+
+        | Fetch a specific list of schools by passing a list of IDs |
+        `/schools/online-mba?ids=111,222` |
+
+        | Fetch all schools in a particular peer group |
+        `/schools/online-mba?peer_group_ids=111,222` |
+
+
+        > The only required param is `dataset`
+
+
+        ### Return Codes
+
+
+        #### 413 Payload Too Large
+
+
+        If more than 1000 records are requested in a single API call, an `HTTP
+        413 Payload Too Large` will be returned. If you need to fetch more than
+        1000 schools you can do it over multiple requests using the `offset` and
+        `limit` params.
+
+
+        #### 200 OK
+
+
+        Successful request, a list of school objects is returned.
+
+
+        #### 400 Bad Request
+
+
+        If malformed parameters are sent, an HTTP 400 Bad Request will be
+        returned along with a specific error message detailing which parameters
+        were malformed. Some potential causes:
+
+
+        - The `:dataset` parameter was mistyped, for instance "online-nba" isn't
+        a valid datatype
+
+        - The peer_group_ids or ids parameters have forbidden characters, like
+        spaces. They must be comma-separated IDs.
+
+        - There is a misspelled URL parameter.
+
+        - One of the `peer_groups_ids` specifies a peer group that contains
+        schools outside of the target `:dataset`. All schools in all specified
+        peer groups must be of the target dataset.
+            
+
+        #### 429 Too Many Requests
+
+
+        If more than 1000 requests are made within a 10 minute window, you must
+        wait a few minutes before trying again.
+      parameters:
+        - name: name_exact
+          in: query
+          schema:
+            type: string
+          description: Search by exact name match (case sensitive)
+          example: Harvard School of Business
+        - name: name_contains
+          in: query
+          schema:
+            type: string
+          description: Case insenstive search for the given string within any school names
+          example: Harv
+        - name: ids
+          in: query
+          schema:
+            type: string
+          description: Only return schools with these ids
+          example: 123,456
+        - name: peer_group_ids
+          in: query
+          schema:
+            type: string
+          description: Only return schools in these peer groups
+          example: 222,333
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '1000'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          example: '4000'
+        - name: name_fuzzy
+          in: query
+          schema:
+            type: string
+          description: >-
+            Search by name using case-insensitive fuzzy match.  This is a simple
+            way to search for schools where you don't know the correct spelling.
+          example: Hrvrd
+        - name: dataset
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                - id: 2155
+                  name: Harvard University
+                  city: Cambridge
+                  type: Private
+                  state: MA
+                  dataset: undergraduate
+                  ipeds_id: '166027'
+                - id: 2323623
+                  name: Another school name
+                  city: Cambridge
+                  type: Private
+                  state: MA
+                  dataset: undergraduate
+                  ipeds_id: '166027'
+  /schools/{dataset}/{id}:
+    get:
+      tags:
+        - Schools
+      summary: Get Single School
+      description: |-
+        Fetch a single school with the given dataset and id.
+
+        ### Return Codes
+
+        - 200 OK
+        - 404 Not Found
+        - 403 Forbidden
+            - If they try to access a valid dataset that they don't have paid access to
+        - 400 Bad Request
+            - If they reference a dataset that doesn't exist
+      parameters:
+        - name: dataset
+          in: path
+          schema:
+            type: string
+          required: true
+          description: dataset of target school to fetch
+          example: online-mba
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          description: ID of target school to fetch
+          example: '838'
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                id: 2155
+                name: Harvard University
+                city: Cambridge
+                type: Private
+                state: MA
+                dataset: undergraduate
+                ipeds_id: '166027'
+  /facts/{dataset}:
+    get:
+      tags:
+        - Facts
+      summary: Get Facts
+      description: >-
+        Retrieve a flat list of Facts based on a variety of filter parameters.
+
+
+        ### Response JSON Body
+
+
+        | **Field** | **Description** |
+
+        | --- | --- |
+
+        | year | Year represented by this fact |
+
+        | value | Fact value. The units of this value will depend on the metric.
+        |
+
+        | school_id | The school this fact data represents |
+
+        | metric_id | Dictates what the fact value represents |
+
+        | format | **Not sure about this one**  <br>We store fact data in a
+        number of formats but I'm not sure what they all mean. Do we actually
+        want to return these possible format strings straight to the user? And
+        we need clear documentation with examples of every type of format. 
+        <br>  <br>Format types:  <br>  <br>`number_0 currency percent
+        ratio-to-one_0 percentage percentage_0 Rank number ratio-to-one
+        number_00 ratio Number currency_0 number rank` |
+
+        | dataset | "online-mba" |
+
+
+        ### Return Codes
+
+
+        #### 200 OK
+
+
+        Successful request, a list of fact objects is returned.
+
+
+        #### 413 Payload Too Large
+
+
+        If more than 10,000 records are requested in a single API call, an `HTTP
+        413 Payload Too Large` will be returned. If you need to fetch more than
+        10,000 facts you can do it over multiple requests using the `offset` and
+        `limit` params.
+
+
+        #### 400 Bad Request
+
+
+        If malformed parameters are sent, an HTTP 400 Bad Request will be
+        returned along with a specific error message detailing which parameters
+        were malformed. Some potential causes:
+
+
+        - The `:dataset` parameter was mistyped, for instance "online-nba" isn't
+        a valid datatype
+
+        - Some parameters have forbidden characters, like spaces. They must be
+        comma-separated IDs.
+
+        - There is a misspelled URL parameter.
+
+        - One of the `peer_groups_ids` specifies a peer group that contains
+        schools outside of the target `:dataset`. All schools in all specified
+        peer groups must be of the target dataset.
+
+        - One of the `school_ids` specifies a school that doesn't exist in the
+        target `:dataset`.
+            
+
+        #### 429 Too Many Requests
+
+
+        If more than 1000 requests are made within a 10 minute window, you must
+        wait a few minutes before trying again.
+
+
+        #### 403 Forbidden
+
+
+        This error can trigger when trying to retrieve facts from a dataset you
+        don't have access to.
+      parameters:
+        - name: metric_ids
+          in: query
+          schema:
+            type: string
+          description: >-
+            Comma separated list of metric_ids.  Filter to only retrieve Facts
+            that belong to these metrics.
+          example: 111,222
+        - name: metric_group_ids
+          in: query
+          schema:
+            type: string
+          description: >-
+            Comma separated list of metric groups.  Filter to only retrieve
+            Facts that belong to metrics in these groups.
+          example: 555,666
+        - name: school_ids
+          in: query
+          schema:
+            type: string
+          description: >-
+            Comma separated list of schools, filter to only retrieve facts for
+            these schools
+          example: 333,444
+        - name: peer_group_ids
+          in: query
+          schema:
+            type: string
+          description: >-
+            Comma separated list of peer group ids.  Only Facts on schools
+            belonging to these peer groups will be returned.
+          example: 777,888
+        - name: years
+          in: query
+          schema:
+            type: string
+          description: Comma separate list of years.  Only retrieve Facts for these years.
+          example: 2016,2017,2019
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Limit the number of facts
+          example: '1000'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: Offset to start retrieving facts from
+          example: '2000'
+        - name: dataset
+          in: path
+          schema:
+            type: string
+          required: true
+          description: All returned facts will be in this dataset
+          example: online-mba
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                - year: 2016
+                  value: 2323
+                  school_id: 333
+                  metric_id: 222
+                  dataset: online-mba
+                  format: percentage
+                - year: 2017
+                  value: 3323
+                  school_id: 333
+                  metric_id: 222
+                  dataset: online-mba
+                  format: percentage
+                - year: 2019
+                  value: 1749
+                  school_id: 333
+                  metric_id: 222
+                  dataset: online-mba
+                  format: percentage
+  /metrics/{dataset}:
+    get:
+      tags:
+        - Metrics
+      summary: Get Metrics
+      description: >-
+        Return a list of metrics from a given set of filter parameters.
+
+
+        ### Return Codes
+
+
+        #### 200 OK
+
+
+        Successful request, a list of metric objects is returned.
+
+
+        #### 400 Bad Request
+
+
+        If malformed parameters are sent, an HTTP 400 Bad Request will be
+        returned along with a specific error message detailing which parameters
+        were malformed. Some potential causes:
+
+
+        - The `:dataset` parameter was mistyped, for instance "online-nba" isn't
+        a valid datatype
+
+        - Some parameters have forbidden characters, like spaces. They must be
+        comma-separated IDs.
+
+        - There is a misspelled URL parameter.
+            
+
+        #### 429 Too Many Requests
+
+
+        If more than 1000 requests are made within a 10 minute window, you must
+        wait a few minutes before trying again.
+
+
+        #### 403 Forbidden
+
+
+        This error can trigger when trying to retrieve metrics from a dataset
+        you don't have access to.
+      parameters:
+        - name: ids
+          in: query
+          schema:
+            type: string
+          description: Comma-separated list of metric IDs
+          example: 111,222
+        - name: description_contains
+          in: query
+          schema:
+            type: string
+          description: >-
+            Only return metrics who's descriptions contains this string (case
+            insensitive)
+          example: Overa
+        - name: description_exact
+          in: query
+          schema:
+            type: string
+          description: Only return metrics with an exact description match (case sensitive)
+          example: Overall Rank
+        - name: format
+          in: query
+          schema:
+            type: string
+          description: >
+            Only search for metrics with this format.  Can be the following
+            values:  number_0
+             currency
+             percent
+             ratio-to-one_0
+             percentage
+             percentage_0
+             Rank
+             number
+             ratio-to-one
+             number_00
+             ratio
+             Number
+             currency_0
+             number 
+             rank
+          example: currency
+        - name: created_by_user_id
+          in: query
+          schema:
+            type: integer
+          description: Return metrics that were created by this user
+          example: '2763'
+        - name: dataset
+          in: path
+          schema:
+            type: string
+          required: true
+          description: The dataset of the requested metrics
+          example: online-mba
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /metrics/{dataset}/{id}:
+    get:
+      tags:
+        - Metrics
+      summary: Get Single Metric
+      description: >-
+        Returns a single Metric with the given dataset and ID.
+
+
+        ### Response Codes
+
+
+        #### 200 OK
+
+
+        Successful request, a single metric object is returned.
+
+
+        #### 400 Bad Request
+
+
+        If malformed parameters are sent, an HTTP 400 Bad Request will be
+        returned along with a specific error message detailing which parameters
+        were malformed. Some potential causes:
+
+
+        - The `:dataset` parameter was mistyped, for instance "online-nba" isn't
+        a valid datatype
+
+        - Some parameters have forbidden characters, like spaces. They must be
+        comma-separated IDs.
+
+        - There is a misspelled URL parameter.
+            
+
+        #### 429 Too Many Requests
+
+
+        If more than 1000 requests are made within a 10 minute window, you must
+        wait a few minutes before trying again.
+
+
+        #### 403 Forbidden
+
+
+        This error can trigger when trying to retrieve metrics from a dataset
+        you don't have access to.
+      parameters:
+        - name: dataset
+          in: path
+          schema:
+            type: string
+          required: true
+          description: The dataset of the requested metric.
+          example: online-mba
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          description: metric id
+          example: '689'
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                id: 37
+                dataset: Engineering
+                description: Civil rank
+                type: Admissions
+                format: rank
+  /metric_groups/{id}:
+    get:
+      tags:
+        - Metric Groups
+      summary: Get Single Metric Group
+      description: |-
+        Fetches a single metric group by ID.
+
+        ### Return Codes
+
+        - **404 Not Found**
+            - Returned if the given metric group ID doesn't exist
+        - **200 OK**
+            - Returned when the metric group is found and access is allowed
+        - **403 Forbidden**
+            - Returned when trying to access a dataset that isn't authorized
+        - **429 Too Many Requests**
+        - **400 Bad Request**
+            - If they reference a dataset that doesn't exist or some other parameter validation fails
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Metric group ID
+          example: 9d7f4954-a463-45e3-b107-a2d056733c98
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                id: 9d7f4954-a463-45e3-b107-a2d056733c98
+                user_id: e32f9775-7454-441a-8e28-fa0a3d953bd5
+                label: My Cool Swaggy Metric Group
+                dataset: undergraduate
+                created: '2013-01-19 01:59:39.377+00'
+                modified: '2013-01-19 01:59:39.377+00'
+                is_public: false
+                metrics:
+                  - id: 37
+                    dataset: Engineering
+                    description: Civil rank
+                    type: Admissions
+                    format: rank
+                  - id: 37
+                    dataset: Engineering
+                    description: Civil rank
+                    type: Admissions
+                    format: rank
+  /metric_groups:
+    get:
+      tags:
+        - Metric Groups
+      summary: Get Metric Groups
+      description: |-
+        Returns a list of metric group objects based on the search parameters.
+
+        ### Return Codes
+
+        - **200 OK**
+            - Either returns an empty list or one or more metric groups.
+        - **403 Forbidden**
+            - Returned when trying to access a dataset that isn't authorized
+        - **429 Too Many Requests**
+        - **400 Bad Request**
+            - If they reference a dataset that doesn't exist or some other parameter validation fails
+      parameters:
+        - name: name_contains
+          in: query
+          schema:
+            type: string
+          description: Loose match (case insensitive)
+          example: My Coo
+        - name: name_exact
+          in: query
+          schema:
+            type: string
+          description: Exact name match (case sensitive)
+          example: My Cool Metric Group
+        - name: dataset
+          in: query
+          schema:
+            type: string
+          example: undergraduate
+        - name: create_user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /peer_groups/{id}:
+    get:
+      tags:
+        - Peer Groups
+      summary: Get Single Peer Group
+      description: |-
+        Fetches a single peer group.
+
+        Return values:
+
+        - **404 Not Found**
+            - Returned if the given peer group ID doesn't exist
+        - **200 OK**
+            - Returned when the peer group is found and access is allowed
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: Peer group ID
+          example: 9d7f4954-a463-45e3-b107-a2d056733c98
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                id: 9d7f4954-a463-45e3-b107-a2d056733c98
+                user_id: e32f9775-7454-441a-8e28-fa0a3d953bd5
+                label: My Cool Swaggy Peer Group
+                dataset: undergraduate
+                created: '2013-01-19 01:59:39.377+00'
+                modified: '2013-01-19 01:59:39.377+00'
+                is_public: false
+                schools:
+                  - id: 2155
+                    name: Harvard University
+                    city: Cambridge
+                    type: Private
+                    state: MA
+                    dataset: undergraduate
+                    ipeds_id: '166027'
+                  - id: 2155
+                    name: Harvard University
+                    city: Cambridge
+                    type: Private
+                    state: MA
+                    dataset: undergraduate
+                    ipeds_id: '166027'
+                  - id: 2155
+                    name: Harvard University
+                    city: Cambridge
+                    type: Private
+                    state: MA
+                    dataset: undergraduate
+                    ipeds_id: '166027'
+  /peer_groups:
+    get:
+      tags:
+        - Peer Groups
+      summary: Get Peer Groups
+      description: |-
+        Returns a list of peer group objects based on the search parameters.
+
+        ### Return Codes
+
+        - 200 OK
+        - 404 Not Found
+      parameters:
+        - name: name_contains
+          in: query
+          schema:
+            type: string
+          description: Loose match (case insensitive)
+          example: My Coo
+        - name: name_exact
+          in: query
+          schema:
+            type: string
+          description: Exact name match (case sensitive)
+          example: My Cool Peer Group
+        - name: dataset
+          in: query
+          schema:
+            type: string
+          example: undergraduate
+        - name: created_by_user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /own_user:
+    get:
+      tags:
+        - Users
+      summary: Get Own User
+      description: >-
+        Returns an object with details about the currently logged in user.
+
+
+        ### Response JSON Body
+
+
+        | **Field** | **Description** |
+
+        | --- | --- |
+
+        | id | user id |
+
+        | account_id | The university account this user belongs to. So all users
+        who are under the same university account will have the same account_id.
+        |
+
+        | name | Name of the user. |
+
+        | email | This is your login email. |
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                user_id: 36c3ca89-360f-489e-9bdc-948b7ee848bf
+                account_id: 8f4c7d24-f718-4443-qaa7-3d8d330587c8
+                name: Count Dracula
+                email: drink_blood@hotmail.com
+  /datasets:
+    get:
+      tags:
+        - Datasets
+      summary: Get Datasets
+      description: >-
+        Returns a list of all Datasets, their names, and whether or not their
+        data is accessible. For instance, a response might look like this:
+
+
+        ``` json
+
+        [
+            {
+                "name": "undergraduate",
+                "has_access": True,
+            },
+            {
+                "name": "education",
+                "has_access": False,
+            },
+            {
+                "name": "engineering",
+                "has_access": True,
+            },
+            ...rest of the datasets
+        ] 
+
+
+        ```
+      responses:
+        undefined:
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                - name: undergraduate
+                  has_access: true
+                - name: education
+                  has_access: false
+                - name: engineering
+                  has_access: true
+                - name: law
+                  has_access: true
+                - name: business
+                  has_access: false
+                - name: medical
+                  has_access: true
+                - name: online_bachelors
+                  has_access: false
+                - name: online_business
+                  has_access: true
+                - name: online_education
+                  has_access: false
+                - name: online_engineering
+                  has_access: false
+                - name: online_info_tech
+                  has_access: false
+                - name: online_nursing
+                  has_access: true
